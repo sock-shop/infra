@@ -58,7 +58,7 @@ jobs:
       - name: Capture Plan Output
         if: steps.plan.outcome == 'success'
         id: capture-plan
-        run: terraform show -json plan.out > plan.json
+        run: terraform show -no-color plan.out > plan.txt
 
       - name: Post Plan Comment
         uses: actions/github-script@v6
