@@ -51,31 +51,40 @@ jobs:
       - name: Terraform Init
         run: terraform init
 
+      - name: Debug - List Files
+        run: ls -al
+
       - name: Terraform Plan
         run: |
           if [ "${{ github.event.inputs.action }}" == "apply" ]; then
             terraform plan -out=tfplan
           else
+            echo "Commenting out resources for destroy plan"
             # Comment out EKS and VPC files for plan
             sed -i 's/^/# /' vpc.tf
             sed -i 's/^/# /' eks.tf
           
+            echo "Modified vpc.tf and eks.tf"
+            cat vpc.tf
+            cat eks.tf
+
             # Modify outputs.tf
             sed -i '/^output "cluster_name" {/,/^}/ s/^/# /' outputs.tf
             sed -i '/^output "cluster_endpoint" {/,/^}/ s/^/# /' outputs.tf
           
+            echo "Modified outputs.tf"
+            cat outputs.tf
+
             # Modify providers.tf
             sed -i '/^provider "kubernetes" {/,/^}/ s/^/# /' providers.tf
             sed -i '/^provider "helm" {/,/^}/ s/^/# /' providers.tf
           
+            echo "Modified providers.tf"
+            cat providers.tf
+          
             terraform plan -out=tfplan
           fi
 
-      - name: Apply or Destroy Terraform Configuration
+      - name: Apply Terraform Configuration
         if: ${{ github.event.inputs.confirm == 'yes' }}
-        run: |
-          terraform apply --auto-approve tfplan
-#          if [ "${{ github.event.inputs.action }}" == "apply" ]; then
-#            terraform apply --auto-approve tfplan
-#          else
-#            terraform apply --auto-approve
+        run: terraform apply --auto-approve tfplan
