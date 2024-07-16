@@ -11,6 +11,6 @@ terraform {
 
 provider "aws" {
   region                   = "eu-west-3"
-  shared_credentials_files = ["~/.aws/credentials"]
+#   shared_credentials_files = ["~/.aws/credentials"]
   profile                  = "student16_mai24_bootcamp_devops_sock-shop"
 }
