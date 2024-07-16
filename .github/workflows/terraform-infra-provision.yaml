@@ -33,17 +33,17 @@ jobs:
         working-directory: .
     steps:
       - name: Git checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Configure AWS credentials from AWS account
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
+        uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: "1.7.5"
           terraform_wrapper: false
@@ -57,7 +57,7 @@ jobs:
       - name: Terraform Plan
         run: |
           if [ "${{ github.event.inputs.action }}" == "apply" ]; then
-            terraform plan -out=tfplan
+            terraform plan -out=tfplan -detailed-exitcode 
           else
             echo "Commenting out resources for destroy plan"
             # Comment out EKS and VPC files for plan
@@ -82,7 +82,7 @@ jobs:
             echo "Modified providers.tf"
             cat providers.tf
           
-            terraform plan -out=tfplan
+            terraform plan -out=tfplan -detailed-exitcode 
           fi
 
       - name: Apply Terraform Configuration
