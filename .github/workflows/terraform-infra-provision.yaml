@@ -1,0 +1,66 @@
+name: Terraform Workflow
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Select action'
+        required: true
+        default: 'apply'
+        type: choice
+        options:
+          - apply
+          - destroy
+      confirm:
+        description: 'Should TF script be applied? (true or false)'
+        required: true
+        default: 'false'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.3.2
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Plan
+        run: |
+          if [ "${{ github.event.inputs.action }}" == "apply" ]; then
+            terraform plan -out=tfplan
+          else
+            # Comment out EKS and VPC files for plan
+            sed -i 's/^/# /' vpc.tf
+            sed -i 's/^/# /' eks.tf
+          
+            # Modify outputs.tf
+            sed -i '/^output "cluster_name" {/,/^}/ s/^/# /' outputs.tf
+            sed -i '/^output "cluster_endpoint" {/,/^}/ s/^/# /' outputs.tf
+          
+            # Modify providers.tf
+            sed -i '/^provider "kubernetes" {/,/^}/ s/^/# /' providers.tf
+            sed -i '/^provider "helm" {/,/^}/ s/^/# /' providers.tf
+          
+            terraform plan -out=tfplan
+          fi
+
+      - name: Apply or Destroy Terraform Configuration
+        if: ${{ github.event.inputs.confirm == 'true' }}
+        run: |
+          terraform apply --auto-approve tfplan
+#          if [ "${{ github.event.inputs.action }}" == "apply" ]; then
+#            terraform apply --auto-approve tfplan
+#          else
+#            terraform apply --auto-approve
