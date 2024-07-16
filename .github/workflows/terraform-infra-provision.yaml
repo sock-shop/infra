@@ -1,4 +1,4 @@
-name: Terraform Workflow
+name: "Terraform Infra Provision"
 
 on:
   workflow_dispatch:
@@ -12,13 +12,13 @@ on:
           - apply
           - destroy
       confirm:
-        description: 'Should TF script be applied? (true or false)'
+        description: 'Should TF script be applied? (yes or no)'
         required: true
-        default: 'false'
+        default: 'no'
         type: choice
         options:
-          - 'true'
-          - 'false'
+          - 'yes'
+          - 'no'
 
 jobs:
   terraform:
@@ -57,7 +57,7 @@ jobs:
           fi
 
       - name: Apply or Destroy Terraform Configuration
-        if: ${{ github.event.inputs.confirm == 'true' }}
+        if: ${{ github.event.inputs.confirm == 'yes' }}
         run: |
           terraform apply --auto-approve tfplan
 #          if [ "${{ github.event.inputs.action }}" == "apply" ]; then

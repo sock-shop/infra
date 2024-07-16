@@ -1,4 +1,4 @@
-name: "Terraform action"
+name: "Terraform Infra Setup"
 on:
   push:
     branches:
