@@ -35,6 +35,9 @@ terraform.rc
 .terraform.lock.hcl
 
 # IDE
-.idea
-.terraform
 .DS_Store
+.idea
+.iws
+tasks.xml
+workspace.xml
+.terraform
