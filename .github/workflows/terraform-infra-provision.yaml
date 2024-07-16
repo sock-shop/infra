@@ -55,9 +55,10 @@ jobs:
         run: ls -al
 
       - name: Terraform Plan
+        id: plan
         run: |
           if [ "${{ github.event.inputs.action }}" == "apply" ]; then
-            terraform plan -out=tfplan -detailed-exitcode 
+            terraform plan -no-color -out=plan.out -detailed-exitcode 
           else
             echo "Commenting out resources for destroy plan"
             # Comment out EKS and VPC files for plan
@@ -82,7 +83,7 @@ jobs:
             echo "Modified providers.tf"
             cat providers.tf
           
-            terraform plan -out=tfplan -detailed-exitcode 
+            terraform plan -no-color -out=plan.out
           fi
 
       - name: Apply Terraform Configuration
