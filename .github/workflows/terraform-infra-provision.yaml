@@ -46,7 +46,6 @@ jobs:
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: "1.7.5"
-#          terraform_wrapper: false
 
       - name: Terraform Init
         run: terraform init
@@ -58,13 +57,13 @@ jobs:
         id: plan
         run: |
           if [ "${{ github.event.inputs.action }}" == "apply" ]; then
-            terraform plan -no-color -out=plan.out -detailed-exitcode 
+            terraform plan -no-color -out=plan.out -detailed-exitcode 2>&1 | tee terraform_plan.log
           else
             echo "Commenting out resources for destroy plan"
             # Comment out EKS and VPC files for plan
             sed -i 's/^/# /' vpc.tf
             sed -i 's/^/# /' eks.tf
-          
+
             echo "Modified vpc.tf and eks.tf"
             cat vpc.tf
             cat eks.tf
@@ -72,20 +71,24 @@ jobs:
             # Modify outputs.tf
             sed -i '/^output "cluster_name" {/,/^}/ s/^/# /' outputs.tf
             sed -i '/^output "cluster_endpoint" {/,/^}/ s/^/# /' outputs.tf
-          
+
             echo "Modified outputs.tf"
             cat outputs.tf
 
             # Modify providers.tf
             sed -i '/^provider "kubernetes" {/,/^}/ s/^/# /' providers.tf
             sed -i '/^provider "helm" {/,/^}/ s/^/# /' providers.tf
-          
+
             echo "Modified providers.tf"
             cat providers.tf
-          
-            terraform plan -no-color -out=plan.out || exit 1
+
+            terraform plan -no-color -out=plan.out -detailed-exitcode 2>&1 | tee terraform_plan.log
           fi
+
+      - name: Display Terraform Plan Log
+        if: failure()
+        run: cat terraform_plan.log
 
       - name: Apply Terraform Configuration
         if: ${{ github.event.inputs.confirm == 'yes' }}
-        run: terraform apply --auto-approve tfplan
+        run: terraform apply --auto-approve plan.out
