@@ -19,12 +19,13 @@ on:
         options:
           - 'yes'
           - 'no'
+
 permissions:
   contents: read
 
-concurrency:
-  group: terraform-infra-provision
-  cancel-in-progress: true
+#concurrency:
+#  group: terraform-infra-provision
+#  cancel-in-progress: true
 
 jobs:
   terraform:
@@ -59,40 +60,31 @@ jobs:
         id: plan
         run: |
           if [ "${{ github.event.inputs.action }}" == "apply" ]; then
-            terraform plan -no-color -out=plan.out -detailed-exitcode 2>&1 | tee terraform_plan.log
+            terraform plan -no-color -out=plan.out -detailed-exitcode | tee terraform_plan.log
           else
-               terraform plan -destroy -target=module.eks -target=module.vpc -out=plan.tfplan
-
-#          #            echo "Commenting out resources for destroy plan"
-#            # Comment out EKS and VPC files for plan
-#            sed -i 's/^/# /' vpc.tf
-#            sed -i 's/^/# /' eks.tf
-#
-#            echo "Modified vpc.tf and eks.tf"
-#            cat vpc.tf
-#            cat eks.tf
-#
-#            # Modify outputs.tf
-#            sed -i '/^output "cluster_name" {/,/^}/ s/^/# /' outputs.tf
-#            sed -i '/^output "cluster_endpoint" {/,/^}/ s/^/# /' outputs.tf
-#
-#            echo "Modified outputs.tf"
-#            cat outputs.tf
-#
-#            # Modify providers.tf
-#            # sed -i '/^provider "kubernetes" {/,/^}/ s/^/# /' providers.tf
-#            # sed -i '/^provider "helm" {/,/^}/ s/^/# /' providers.tf
-#
-#            # echo "Modified providers.tf"
-#            # cat providers.tf
-
-#            terraform plan -refresh=false  -no-color -out=plan.out -detailed-exitcode 2>&1 | tee terraform_plan.log
+            terraform plan -destroy -target=module.eks -target=module.vpc -out=plan.tfplan | tee terraform_plan.log
           fi
+        continue-on-error: true
 
       - name: Display Terraform Plan Log
-        if: failure()
+        if: steps.plan.outcome == 'failure'
         run: cat terraform_plan.log
 
       - name: Apply Terraform Configuration
         if: ${{ github.event.inputs.confirm == 'yes' }}
-        run: terraform apply --auto-approve plan.out
+        run: |
+          if [ "${{ github.event.inputs.action }}" == "apply" ]; then
+            terraform apply --auto-approve plan.out
+          else
+            terraform apply --auto-approve remaining_plan.tfplan
+          fi
+
+      - name: Cleaning Up Residual Resources
+        if: success() && github.event.inputs.action  == 'destroy'
+        run: |
+          terraform plan -destroy -target=kubernetes_service_account.service-account -target=module.lb_role -out=remaining_plan.tfplan | tee cleanup_plan.log
+
+      - name: Apply Cleanup Plan
+        if: success() && github.event.inputs.action == 'destroy' && github.event.inputs.confirm == 'yes'
+        run: terraform apply --auto-approve remaining_plan.tfplan
+
