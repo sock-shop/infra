@@ -82,7 +82,7 @@ jobs:
             echo "Modified providers.tf"
             cat providers.tf
 
-            terraform plan -destroy  -no-color -out=plan.out -detailed-exitcode 2>&1 | tee terraform_plan.log
+            terraform plan -destroy -refresh=false  -no-color -out=plan.out -detailed-exitcode 2>&1 | tee terraform_plan.log
           fi
 
       - name: Display Terraform Plan Log
