@@ -83,7 +83,7 @@ jobs:
             echo "Modified providers.tf"
             cat providers.tf
           
-            terraform plan -no-color -out=plan.out
+            terraform plan -no-color -out=plan.out || exit 1
           fi
 
       - name: Apply Terraform Configuration
