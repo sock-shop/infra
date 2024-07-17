@@ -73,11 +73,11 @@ jobs:
             cat outputs.tf
 
             # Modify providers.tf
-            sed -i '/^provider "kubernetes" {/,/^}/ s/^/# /' providers.tf
-            sed -i '/^provider "helm" {/,/^}/ s/^/# /' providers.tf
+            # sed -i '/^provider "kubernetes" {/,/^}/ s/^/# /' providers.tf
+            # sed -i '/^provider "helm" {/,/^}/ s/^/# /' providers.tf
 
-            echo "Modified providers.tf"
-            cat providers.tf
+            # echo "Modified providers.tf"
+            # cat providers.tf
 
             terraform plan -refresh=false  -no-color -out=plan.out -detailed-exitcode 2>&1 | tee terraform_plan.log
           fi
@@ -88,4 +88,4 @@ jobs:
 
       - name: Apply Terraform Configuration
         if: ${{ github.event.inputs.confirm == 'yes' }}
-        run: terraform apply --auto-approve plan.out
+        run: terraform apply -refresh=false --auto-approve plan.out
