@@ -23,10 +23,6 @@ on:
 permissions:
   contents: read
 
-#concurrency:
-#  group: terraform-infra-provision
-#  cancel-in-progress: true
-
 jobs:
   terraform:
     runs-on: ubuntu-latest
@@ -62,7 +58,7 @@ jobs:
           if [ "${{ github.event.inputs.action }}" == "apply" ]; then
             terraform plan -no-color -out=plan.out -detailed-exitcode | tee terraform_plan.log
           else
-            terraform plan -destroy -target=module.eks -target=module.vpc -out=plan.tfplan | tee terraform_plan.log
+            terraform plan -destroy -target=module.eks -target=module.vpc -out=plan.out  | tee terraform_plan.log
           fi
         continue-on-error: true
 
@@ -72,19 +68,17 @@ jobs:
 
       - name: Apply Terraform Configuration
         if: ${{ github.event.inputs.confirm == 'yes' }}
-        run: |
-          if [ "${{ github.event.inputs.action }}" == "apply" ]; then
-            terraform apply --auto-approve plan.out
-          else
-            terraform apply --auto-approve remaining_plan.tfplan
-          fi
+        run: terraform apply --auto-approve plan.out
 
       - name: Cleaning Up Residual Resources
         if: success() && github.event.inputs.action  == 'destroy'
         run: |
-          terraform plan -destroy -target=kubernetes_service_account.service-account -target=module.lb_role -out=remaining_plan.tfplan | tee cleanup_plan.log
+          terraform plan -destroy -target=kubernetes_service_account.service-account -target=module.lb_role -out=remaining_plan.out | tee cleanup_plan.log
 
       - name: Apply Cleanup Plan
         if: success() && github.event.inputs.action == 'destroy' && github.event.inputs.confirm == 'yes'
-        run: terraform apply --auto-approve remaining_plan.tfplan
+        run: terraform apply --auto-approve remaining_plan.out
 
+      - name: Display Terraform Cleanup Plan Log
+        if: failure()
+        run: cat cleanup_plan.log
