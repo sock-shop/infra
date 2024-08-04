@@ -3,7 +3,7 @@ module "ecr" {
 
   repository_name = "private-shop-sock"
 
-  repository_read_write_access_arns = ["arn:aws:iam::885801475464:role/terraform"]
+  repository_read_write_access_arns = ["arn:aws:iam::885801475464:role/terraform-ecr"]
   repository_lifecycle_policy = jsonencode({
     rules = [
       {
