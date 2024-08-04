@@ -3,10 +3,10 @@ data "aws_iam_policy_document" "push-pull-policy-document" {
     sid    = "NewPolicy"
     effect = "Allow"
 
-    principals {
-      type = "AWS"
-      identifiers = var.user_identifiers
-    }
+#     principals {
+#       type = "AWS"
+#       identifiers = var.user_identifiers
+#     }
 
     actions = [
       "ecr:GetDownloadUrlForLayer",
@@ -24,6 +24,8 @@ data "aws_iam_policy_document" "push-pull-policy-document" {
       "ecr:SetRepositoryPolicy",
       "ecr:DeleteRepositoryPolicy",
     ]
+
+    resources = [for repo in aws_ecr_repository.ecr-repositories : repo.arn]
   }
 }
 
@@ -43,8 +45,6 @@ resource "aws_ecr_repository" "ecr-repositories" {
   for_each = toset(var.repository_names)
 
   name = "${var.repository_group}/${each.value}"
-
-  depends_on = [aws_iam_group_policy_attachment.push-pull-policy-attachment]
 }
 
 resource "aws_ecr_lifecycle_policy" "ecr-repositories-lifecycle-policy" {
