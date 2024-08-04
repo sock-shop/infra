@@ -35,11 +35,12 @@ resource "aws_iam_group_policy_attachment" "push-pull-policy-attachment" {
   policy_arn = aws_iam_policy.push-pull-policy.arn
 }
 
-
 resource "aws_ecr_repository" "ecr-repositories" {
   for_each = toset(var.repository_names)
 
   name = each.value
+
+  tags = local.tags
 }
 
 resource "aws_ecr_lifecycle_policy" "ecr-repositories-lifecycle-policy" {
@@ -67,6 +68,3 @@ resource "aws_ecr_lifecycle_policy" "ecr-repositories-lifecycle-policy" {
 }
 EOF
 }
-
-
-#   tags = local.tags
