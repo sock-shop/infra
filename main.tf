@@ -8,7 +8,6 @@ data "aws_availability_zones" "available" {
   }
 }
 
-
 locals {
   name        = "sock-shop-mai24"
   bucket_name = "aws-sock-shop-mai24-infra-state.file"
@@ -18,7 +17,7 @@ locals {
   azs      = slice(data.aws_availability_zones.available.names, 0, 3)
 
   tags = {
-    Terraform   = "true"
+    Terraform = "true"
     GithubRepo = "infra"
     GithubOrg  = local.name
   }
