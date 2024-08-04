@@ -22,8 +22,5 @@ module "ecr" {
     ]
   })
 
-  tags = {
-    Terraform   = "true"
-    Environment = "dev"
-  }
+  tags = local.tags
 }
