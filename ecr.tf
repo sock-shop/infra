@@ -3,11 +3,6 @@ data "aws_iam_policy_document" "push-pull-policy-document" {
     sid    = "NewPolicy"
     effect = "Allow"
 
-#     principals {
-#       type = "AWS"
-#       identifiers = var.user_identifiers
-#     }
-
     actions = [
       "ecr:GetDownloadUrlForLayer",
       "ecr:BatchGetImage",
@@ -44,7 +39,7 @@ resource "aws_iam_group_policy_attachment" "push-pull-policy-attachment" {
 resource "aws_ecr_repository" "ecr-repositories" {
   for_each = toset(var.repository_names)
 
-  name = "${var.repository_group}/${each.value}"
+  name = each.value
 }
 
 resource "aws_ecr_lifecycle_policy" "ecr-repositories-lifecycle-policy" {
