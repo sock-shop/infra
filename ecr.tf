@@ -1,6 +1,6 @@
 data "aws_iam_policy_document" "push-pull-policy-document" {
   statement {
-    sid    = "new policy"
+    sid    = "NewPolicy"
     effect = "Allow"
 
     principals {
